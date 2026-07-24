@@ -323,7 +323,7 @@ th{ background:var(--beige); font-weight:700; text-align:center; white-space:now
         <td><input class="cell-input num" type="text" inputmode="numeric" data-key="delivery" value="12,000" oninput="onMoneyInput(this); recalc()"> 원</td>
       </tr>
       <tr>
-        <th>감가상각비용 (−)</th>
+        <th>특별할인금액 (−)</th>
         <td><input class="cell-input num" type="text" inputmode="numeric" data-key="depreciation" placeholder="0" oninput="onMoneyInput(this); setDriver('depreciation')"> 원</td>
       </tr>
       <tr class="final">
@@ -549,8 +549,8 @@ function renumberRepairRows(){
 /* =========================================================================
    [5] 실시간 비용 계산 (양방향)
    base = 부품비합계 + 공임비 + 택배비
-   - 기준이 '감가상각'일 때: 최종수리비 = base − 감가상각비용
-   - 기준이 '최종수리비'일 때: 감가상각비용 = base − 최종수리비
+   - 기준이 '특별할인'일 때: 최종수리비 = base − 특별할인금액
+   - 기준이 '최종수리비'일 때: 특별할인금액 = base − 최종수리비
    마지막에 입력한 칸이 기준(costDriver)이 된다.
    ========================================================================= */
 let costDriver = 'depreciation';   // 'depreciation' | 'final'
@@ -576,13 +576,13 @@ function recalc(){
 
   let total;   // 최종수리비
   if(costDriver === 'final'){
-    // 최종수리비 입력 → 감가상각비용을 역산(차액)
+    // 최종수리비 입력 → 특별할인금액을 역산(차액)
     total = toNumber(finalEl.value);
     const dep = base - total;
     // 기준 칸(finalEl)은 사용자가 입력 중이므로 건드리지 않는다
     depEl.value = dep ? dep.toLocaleString('ko-KR') : '';
   }else{
-    // 감가상각비용 입력 → 최종수리비 계산
+    // 특별할인금액 입력 → 최종수리비 계산
     const dep = toNumber(depEl.value);
     total = base - dep;
     finalEl.value = total ? total.toLocaleString('ko-KR') : '';
@@ -602,7 +602,7 @@ function collectState(){
 
   // 고객정보 + 날짜 등 data-key 입력값 전체
   document.querySelectorAll('[data-key]').forEach(el=>{ state.meta[el.dataset.key] = el.value; });
-  state.meta.__driver = costDriver;   // 계산 기준(감가상각/최종수리비)
+  state.meta.__driver = costDriver;   // 계산 기준(특별할인/최종수리비)
 
   // 의뢰내용 10행
   document.querySelectorAll('[data-req]').forEach(el=>{
