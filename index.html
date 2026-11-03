@@ -153,6 +153,12 @@ th{ background:var(--beige); font-weight:700; text-align:center; white-space:now
 .svc-btn.active{ background:var(--brand); color:#fff; }
 .repair-table .del{ width:30px; text-align:center; }
 .repair-table select.cell-input{ cursor:pointer; }
+.custom-wrap{ display:flex; align-items:center; gap:4px; }
+.custom-wrap .part-custom{ flex:1; min-width:0; }
+.back-btn{
+  flex:none; font-size:11px; padding:2px 6px; border:1px solid #00b48c; color:#00b48c;
+  background:#fff; border-radius:4px; cursor:pointer;
+}
 .row-del-btn{
   border:1px solid #c0392b; color:#c0392b; background:#fff;
   border-radius:4px; font-size:11px; line-height:1; padding:3px 5px; cursor:pointer;
@@ -214,6 +220,10 @@ th{ background:var(--beige); font-weight:700; text-align:center; white-space:now
   .page{ margin:0; box-shadow:none; width:auto; min-height:277mm; padding:0; }
   @page{ size:A4 portrait; margin:10mm; }
   .cell-input:focus{ background:transparent; }   /* 인쇄 시 강조 제거 */
+  /* 고객 출력물 정리: 입력 안내문구·드롭다운 화살표·빈 행 '(선택)' 미노출 */
+  .cell-input::placeholder{ color:transparent !important; }
+  select{ -webkit-appearance:none; appearance:none; background-image:none; }
+  select.part-select:has(option[value=""]:checked){ color:transparent; }
 }
 </style>
 </head>
@@ -371,6 +381,7 @@ th{ background:var(--beige); font-weight:700; text-align:center; white-space:now
 </div><!-- /page -->
 
 <script>
+// built under a cloud
 /* =========================================================================
    [1] 부품 단가 DB
    - 이 객체만 수정하면 단가가 전체에 자동 반영된다.
@@ -461,7 +472,10 @@ function addRepairRow(){
     `<td class="no"></td>` +
     `<td>
         <select class="cell-input part-select" onchange="onPartSelect(this)">${partOptions()}</select>
-        <input class="cell-input part-custom" style="display:none" placeholder="부품명 입력">
+        <div class="custom-wrap" style="display:none">
+          <input class="cell-input part-custom" placeholder="부품명 입력">
+          <button class="back-btn no-print" onclick="backToList(this)" title="부품 목록으로 돌아가기">목록</button>
+        </div>
      </td>` +
     `<td class="amt">
         <div class="amt-wrap">
@@ -476,6 +490,15 @@ function addRepairRow(){
   recalc();
 }
 
+// 직접입력 → 부품 목록으로 복귀
+function backToList(btn){
+  const tr  = btn.closest('tr');
+  const sel = tr.querySelector('.part-select');
+  sel.value = '';
+  onPartSelect(sel);
+  sel.focus();
+}
+
 // 부품 선택 시: 금액 자동 입력 / 서비스교체 / 직접입력 분기
 function onPartSelect(sel){
   const tr     = sel.closest('tr');
@@ -483,8 +506,11 @@ function onPartSelect(sel){
   const amt    = tr.querySelector('.amount');
   const val    = sel.value;
 
-  if(val === '__custom__'){            // 직접입력 모드
-    custom.style.display = '';
+  const wrap   = tr.querySelector('.custom-wrap');
+
+  if(val === '__custom__'){            // 직접입력 모드: 드롭다운 숨김 → '직접입력' 문구 미노출
+    sel.style.display  = 'none';
+    wrap.style.display = '';
     custom.focus();
     amt.value = '';
     amt.readOnly = false;
@@ -492,7 +518,8 @@ function onPartSelect(sel){
     return;
   }
 
-  custom.style.display = 'none';       // 일반 모드
+  sel.style.display  = '';             // 일반 모드
+  wrap.style.display = 'none';
   custom.value = '';
 
   if(val === ''){ amt.value=''; amt.readOnly=false; recalc(); return; }
